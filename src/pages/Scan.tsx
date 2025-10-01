@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Camera, Upload } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { toast } from "@/hooks/use-toast";
@@ -28,6 +28,12 @@ export default function Scan() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [scanMode, setScanMode] = useState<"camera" | "manual">("camera");
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -37,6 +43,113 @@ export default function Scan() {
     renewal_period_days: 30,
     notes: "",
   });
+
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "environment" } 
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+      setStream(mediaStream);
+    } catch (err) {
+      console.error("Camera error:", err);
+      toast({
+        title: "Camera Error",
+        description: "Unable to access camera. Please use manual entry.",
+        variant: "destructive",
+      });
+      setScanMode("manual");
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  };
+
+  const captureImage = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement("canvas");
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0);
+        const imageData = canvas.toDataURL("image/jpeg", 0.8);
+        setCapturedImage(imageData);
+        stopCamera();
+        extractDocumentData(imageData);
+      }
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setCapturedImage(result);
+        extractDocumentData(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const extractDocumentData = async (imageBase64: string) => {
+    setExtracting(true);
+    setError("");
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("scan-document", {
+        body: { imageBase64 },
+      });
+
+      if (error) throw error;
+
+      if (data.success && data.data) {
+        setFormData(prev => ({
+          ...prev,
+          ...data.data,
+        }));
+        toast({
+          title: "Document Scanned",
+          description: "Document information extracted successfully. Please review and save.",
+        });
+      } else {
+        throw new Error(data.error || "Failed to extract document data");
+      }
+    } catch (err) {
+      console.error("Extraction error:", err);
+      setError("Failed to extract document data. Please enter manually.");
+      toast({
+        title: "Extraction Failed",
+        description: "Please enter document details manually.",
+        variant: "destructive",
+      });
+    } finally {
+      setExtracting(false);
+    }
+  };
+
+  const retakePhoto = () => {
+    setCapturedImage(null);
+    setFormData({
+      name: "",
+      document_type: "",
+      issuing_authority: "",
+      expiry_date: "",
+      renewal_period_days: 30,
+      notes: "",
+    });
+    if (scanMode === "camera") {
+      startCamera();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,19 +180,19 @@ export default function Scan() {
 
       if (error) throw error;
 
-      // Create reminder
-      const reminderDate = new Date(validatedData.expiry_date);
-      reminderDate.setDate(reminderDate.getDate() - validatedData.renewal_period_days);
+      // Create multi-stage reminders (30, 14, 7, 1 day before expiry)
+      const reminderStages = [30, 14, 7, 1];
+      const reminders = reminderStages.map(days => {
+        const reminderDate = new Date(validatedData.expiry_date);
+        reminderDate.setDate(reminderDate.getDate() - days);
+        return {
+          document_id: data.id,
+          user_id: user?.id,
+          reminder_date: reminderDate.toISOString().split('T')[0],
+        };
+      });
 
-      await supabase
-        .from('reminders')
-        .insert([
-          {
-            document_id: data.id,
-            user_id: user?.id,
-            reminder_date: reminderDate.toISOString().split('T')[0],
-          }
-        ]);
+      await supabase.from('reminders').insert(reminders);
 
       toast({
         title: "Document added successfully",
@@ -107,18 +220,110 @@ export default function Scan() {
     <div className="min-h-screen bg-background pb-20">
       <header className="bg-card border-b border-border px-4 py-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="sm" onClick={() => {
+            stopCamera();
+            navigate(-1);
+          }}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Add Document</h1>
-            <p className="text-muted-foreground">Enter your document details manually</p>
+            <p className="text-muted-foreground">
+              {scanMode === "camera" ? "Scan or upload a document" : "Enter details manually"}
+            </p>
           </div>
         </div>
       </header>
 
-      <main className="px-4 py-6">
-        <Card>
+      <main className="px-4 py-6 space-y-4">
+        {/* Mode Toggle */}
+        <div className="flex gap-2">
+          <Button
+            variant={scanMode === "camera" ? "default" : "outline"}
+            onClick={() => {
+              setScanMode("camera");
+              setCapturedImage(null);
+            }}
+            className="flex-1"
+          >
+            <Camera className="h-4 w-4 mr-2" />
+            Scan
+          </Button>
+          <Button
+            variant={scanMode === "manual" ? "default" : "outline"}
+            onClick={() => {
+              setScanMode("manual");
+              stopCamera();
+              setCapturedImage(null);
+            }}
+            className="flex-1"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Manual Entry
+          </Button>
+        </div>
+
+        {/* Camera/Upload Section */}
+        {scanMode === "camera" && !capturedImage && (
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover"
+                  onLoadedMetadata={startCamera}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={captureImage} className="flex-1">
+                  <Camera className="h-4 w-4 mr-2" />
+                  Capture
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-1"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload
+                </Button>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Captured Image Preview */}
+        {capturedImage && (
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <img src={capturedImage} alt="Captured document" className="w-full rounded-lg" />
+              {extracting && (
+                <div className="flex items-center justify-center gap-2 text-primary">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Extracting document data...</span>
+                </div>
+              )}
+              {!extracting && (
+                <Button variant="outline" onClick={retakePhoto} className="w-full">
+                  Retake Photo
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Form Section */}
+        {(scanMode === "manual" || capturedImage) && !extracting && (
+          <Card>
           <CardHeader>
             <CardTitle>Document Information</CardTitle>
           </CardHeader>
@@ -219,6 +424,7 @@ export default function Scan() {
             </form>
           </CardContent>
         </Card>
+        )}
       </main>
 
       <BottomNavigation />
