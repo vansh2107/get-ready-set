@@ -4,9 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Calendar, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { FileText, Plus, Camera } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
+import { DocumentStats } from "@/components/dashboard/DocumentStats";
+import { DocumentTypeChart } from "@/components/dashboard/DocumentTypeChart";
+import { ExpiryTimeline } from "@/components/dashboard/ExpiryTimeline";
 
 interface Document {
   id: string;
@@ -20,12 +23,15 @@ interface DashboardStats {
   total: number;
   expiringSoon: number;
   expired: number;
+  valid: number;
 }
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [stats, setStats] = useState<DashboardStats>({ total: 0, expiringSoon: 0, expired: 0 });
+  const [stats, setStats] = useState<DashboardStats>({ total: 0, expiringSoon: 0, expired: 0, valid: 0 });
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
+  const [typeData, setTypeData] = useState<Array<{ name: string; value: number }>>([]);
+  const [timelineData, setTimelineData] = useState<Array<{ month: string; expiring: number }>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,9 +61,51 @@ export default function Dashboard() {
         const expiryDate = new Date(doc.expiry_date);
         return expiryDate >= today && expiryDate <= thirtyDaysFromNow;
       }).length || 0;
+      const valid = total - expired - expiringSoon;
 
-      setStats({ total, expiringSoon, expired });
+      setStats({ total, expiringSoon, expired, valid });
       setRecentDocuments(documents?.slice(0, 3) || []);
+
+      // Calculate document type distribution
+      const typeCounts: Record<string, number> = {};
+      documents?.forEach(doc => {
+        const type = doc.document_type.replace('_', ' ');
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+      });
+
+      setTypeData(
+        Object.entries(typeCounts).map(([name, value]) => ({
+          name: name.charAt(0).toUpperCase() + name.slice(1),
+          value,
+        }))
+      );
+
+      // Calculate expiry timeline (next 6 months)
+      const monthCounts: Record<string, number> = {};
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      
+      for (let i = 0; i < 6; i++) {
+        const date = new Date();
+        date.setMonth(date.getMonth() + i);
+        const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+        monthCounts[monthKey] = 0;
+      }
+
+      documents?.forEach(doc => {
+        const expiryDate = new Date(doc.expiry_date);
+        const monthKey = `${monthNames[expiryDate.getMonth()]} ${expiryDate.getFullYear()}`;
+        
+        if (monthCounts.hasOwnProperty(monthKey)) {
+          monthCounts[monthKey]++;
+        }
+      });
+
+      setTimelineData(
+        Object.entries(monthCounts).map(([month, expiring]) => ({
+          month,
+          expiring,
+        }))
+      );
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -96,58 +144,26 @@ export default function Dashboard() {
 
       <main className="px-4 py-6 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Documents</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-            </CardContent>
-          </Card>
+        <DocumentStats
+          total={stats.total}
+          expiringSoon={stats.expiringSoon}
+          expired={stats.expired}
+          valid={stats.valid}
+        />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-warning">{stats.expiringSoon}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Expired</CardTitle>
-              <Calendar className="h-4 w-4 text-destructive" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-destructive">{stats.expired}</div>
-            </CardContent>
-          </Card>
+        {/* Charts */}
+        <div className="space-y-4">
+          <DocumentTypeChart data={typeData} />
+          <ExpiryTimeline data={timelineData} />
         </div>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Link to="/scan">
-              <Button className="w-full justify-start gap-2">
-                <Plus className="h-4 w-4" />
-                Add New Document
-              </Button>
-            </Link>
-            <Link to="/documents">
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <FileText className="h-4 w-4" />
-                View All Documents
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        {/* Quick Action */}
+        <Link to="/scan">
+          <Button className="w-full" size="lg">
+            <Camera className="h-5 w-5 mr-2" />
+            Scan New Document
+          </Button>
+        </Link>
 
         {/* Recent Documents */}
         <Card>

@@ -9,6 +9,7 @@ import { ArrowLeft, Edit2, Trash2, Calendar, Building, FileText, Clock } from "l
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { toast } from "@/hooks/use-toast";
+import { DocumentHistory } from "@/components/document/DocumentHistory";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -272,6 +273,9 @@ export default function DocumentDetail() {
             </AlertDialog>
           </CardContent>
         </Card>
+
+        {/* Document History */}
+        <DocumentHistory documentId={id!} />
       </main>
 
       <BottomNavigation />

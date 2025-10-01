@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { AuditLogs } from "@/components/profile/AuditLogs";
 
 interface Profile {
   id: string;
@@ -210,10 +211,13 @@ export default function Profile() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Phase</span>
-              <span className="text-foreground">MVP (Manual Entry)</span>
+              <span className="text-foreground">Phase 4 - Analytics</span>
             </div>
           </CardContent>
         </Card>
+
+        {/* Activity Log */}
+        <AuditLogs />
       </main>
 
       <BottomNavigation />
