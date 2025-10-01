@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileText, Plus, Search, Filter } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
+import { useToast } from "@/hooks/use-toast";
+import { exportToCSV } from "@/utils/exportData";
 
 interface Document {
   id: string;
@@ -21,12 +23,14 @@ interface Document {
 
 export default function Documents() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("created_at");
   const [filterType, setFilterType] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
 
   useEffect(() => {
     if (user) {
@@ -222,7 +226,23 @@ export default function Documents() {
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
+            
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="valid">Valid</SelectItem>
+                <SelectItem value="expiring">Expiring Soon</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+          
+          <Button onClick={handleExport} variant="outline" className="w-full">
+            Export to CSV
+          </Button>
         </div>
       </header>
 
