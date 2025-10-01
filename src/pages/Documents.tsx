@@ -31,8 +31,74 @@ export default function Documents() {
   useEffect(() => {
     if (user) {
       fetchDocuments();
+      
+      // Real-time subscription for multi-device sync
+      const channel = supabase
+        .channel('documents-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'documents',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            fetchDocuments();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [documents, searchQuery, filterType, filterStatus]);
+
+  const applyFilters = () => {
+    let filtered = [...documents];
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(doc =>
+        doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doc.issuing_authority?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Type filter
+    if (filterType !== "all") {
+      filtered = filtered.filter(doc => doc.document_type === filterType);
+    }
+
+    // Status filter
+    if (filterStatus !== "all") {
+      const today = new Date();
+      filtered = filtered.filter(doc => {
+        const expiryDate = new Date(doc.expiry_date);
+        const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (filterStatus === "expired") return daysUntilExpiry < 0;
+        if (filterStatus === "expiring") return daysUntilExpiry >= 0 && daysUntilExpiry <= 30;
+        if (filterStatus === "valid") return daysUntilExpiry > 30;
+        return true;
+      });
+    }
+
+    setFilteredDocuments(filtered);
+  };
+
+  const handleExport = () => {
+    exportToCSV(documents);
+    toast({
+      title: "Export Successful",
+      description: "Your documents have been exported to CSV.",
+    });
+  };
 
   useEffect(() => {
     filterAndSortDocuments();
