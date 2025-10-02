@@ -11,6 +11,7 @@ import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { AuditLogs } from "@/components/profile/AuditLogs";
+import { FeedbackDialog } from "@/components/feedback/FeedbackDialog";
 
 interface Profile {
   id: string;
@@ -202,6 +203,15 @@ export default function Profile() {
         {/* App Information */}
         <Card>
           <CardHeader>
+            <CardTitle>Feedback & Support</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FeedbackDialog />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>About</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -211,7 +221,7 @@ export default function Profile() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Phase</span>
-              <span className="text-foreground">Phase 4 - Analytics</span>
+              <span className="text-foreground">Phase 6 - AI Evolution</span>
             </div>
           </CardContent>
         </Card>

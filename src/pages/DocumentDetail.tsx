@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { toast } from "@/hooks/use-toast";
 import { DocumentHistory } from "@/components/document/DocumentHistory";
+import { AIInsights } from "@/components/document/AIInsights";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -275,7 +276,8 @@ export default function DocumentDetail() {
         </Card>
 
         {/* Document History */}
-        <DocumentHistory documentId={id!} />
+          <AIInsights document={document} />
+          <DocumentHistory documentId={id!} />
       </main>
 
       <BottomNavigation />
