@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,13 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Save, Loader2, Camera, Upload } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { BulkDocumentUpload } from "@/components/document/BulkDocumentUpload";
 
 const documentSchema = z.object({
   name: z.string().min(1, "Document name is required"),
@@ -28,12 +29,14 @@ export default function Scan() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [scanMode, setScanMode] = useState<"camera" | "manual">("camera");
+  const [scanMode, setScanMode] = useState<"camera" | "manual" | "bulk">("bulk");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [selectedOrg, setSelectedOrg] = useState<string>("personal");
   
   const [formData, setFormData] = useState({
     name: "",
@@ -43,6 +46,23 @@ export default function Scan() {
     renewal_period_days: 30,
     notes: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      fetchOrganizations();
+    }
+  }, [user]);
+
+  const fetchOrganizations = async () => {
+    const { data } = await supabase
+      .from('organizations')
+      .select('*')
+      .order('name');
+    
+    if (data) {
+      setOrganizations(data);
+    }
+  };
 
   const startCamera = async () => {
     try {
@@ -227,17 +247,57 @@ export default function Scan() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Add Document</h1>
+            <h1 className="text-2xl font-bold text-foreground">Add Documents</h1>
             <p className="text-muted-foreground">
-              {scanMode === "camera" ? "Scan or upload a document" : "Enter details manually"}
+              {scanMode === "bulk" ? "Bulk upload" : scanMode === "camera" ? "Scan or upload" : "Manual entry"}
             </p>
           </div>
         </div>
       </header>
 
       <main className="px-4 py-6 space-y-4">
+        {/* Organization Selector */}
+        {organizations.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Organization Context</CardTitle>
+              <CardDescription>Choose where to add these documents</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label>Add documents to:</Label>
+                <Select value={selectedOrg} onValueChange={setSelectedOrg}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="personal">Personal Documents</SelectItem>
+                    {organizations.map((org) => (
+                      <SelectItem key={org.id} value={org.id}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Mode Toggle */}
         <div className="flex gap-2">
+          <Button
+            variant={scanMode === "bulk" ? "default" : "outline"}
+            onClick={() => {
+              setScanMode("bulk");
+              stopCamera();
+              setCapturedImage(null);
+            }}
+            className="flex-1"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Bulk Upload
+          </Button>
           <Button
             variant={scanMode === "camera" ? "default" : "outline"}
             onClick={() => {
@@ -259,9 +319,18 @@ export default function Scan() {
             className="flex-1"
           >
             <Save className="h-4 w-4 mr-2" />
-            Manual Entry
+            Manual
           </Button>
         </div>
+
+        {/* Bulk Upload Section */}
+        {scanMode === "bulk" && (
+          <BulkDocumentUpload 
+            userId={user?.id || ''} 
+            organizationId={selectedOrg === "personal" ? null : selectedOrg}
+            onComplete={() => navigate('/documents')}
+          />
+        )}
 
         {/* Camera/Upload Section */}
         {scanMode === "camera" && !capturedImage && (

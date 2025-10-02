@@ -12,6 +12,7 @@ import DocumentDetail from "./pages/DocumentDetail";
 import Scan from "./pages/Scan";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
+import Teams from "./pages/Teams";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/teams" 
+              element={
+                <ProtectedRoute>
+                  <Teams />
                 </ProtectedRoute>
               } 
             />
