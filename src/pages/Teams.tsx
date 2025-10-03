@@ -28,7 +28,6 @@ type OrganizationMember = {
   created_at: string;
   profiles?: {
     display_name: string | null;
-    email: string | null;
   };
 };
 
@@ -108,7 +107,7 @@ export default function Teams() {
 
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('user_id, display_name, email')
+      .select('user_id, display_name')
       .in('user_id', userIds);
 
     const membersWithProfiles = data?.map(member => ({
@@ -159,27 +158,20 @@ export default function Teams() {
   const inviteMember = async () => {
     if (!inviteEmail.trim() || !selectedOrg) return;
 
-    // First, find user by email through profiles table
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('user_id')
-      .eq('email', inviteEmail.toLowerCase())
-      .single();
-
-    if (profileError || !profile) {
-      toast({
-        title: "Error",
-        description: "User not found. They must sign up first.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Find user by email through auth.users (we need to use an edge function or admin API for this in production)
+    // For now, we'll show a more helpful error message
+    toast({
+      title: "Feature Not Available",
+      description: "Email-based invites require additional setup. Please share your organization ID with users to join.",
+      variant: "destructive",
+    });
+    return;
 
     const { error } = await supabase
       .from('organization_members')
       .insert([{
         organization_id: selectedOrg,
-        user_id: profile.user_id,
+        user_id: inviteEmail, // In production, this would need proper user lookup
         role: inviteRole
       }]);
 
@@ -468,7 +460,7 @@ export default function Teams() {
                               {member.profiles?.display_name || 'Unknown User'}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {member.profiles?.email}
+                              User ID: {member.user_id.substring(0, 8)}...
                             </p>
                           </div>
                           <div className="flex items-center gap-2">

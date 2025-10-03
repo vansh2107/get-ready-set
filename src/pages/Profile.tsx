@@ -16,7 +16,6 @@ import { FeedbackDialog } from "@/components/feedback/FeedbackDialog";
 interface Profile {
   id: string;
   display_name: string | null;
-  email: string | null;
 }
 
 export default function Profile() {
@@ -34,40 +33,39 @@ export default function Profile() {
   }, [user]);
 
   const fetchProfile = async () => {
+    if (!user) return;
+
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user?.id)
+        .from("profiles")
+        .select("id, display_name, user_id, created_at, updated_at")
+        .eq("user_id", user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      if (data) {
-        setProfile(data);
-        setDisplayName(data.display_name || "");
-      }
+      if (error) throw error;
+      setProfile(data);
+      setDisplayName(data.display_name || "");
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error("Error fetching profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load profile",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const updateProfile = async () => {
+    if (!user) return;
+
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('profiles')
-        .upsert([
-          {
-            user_id: user?.id,
-            display_name: displayName,
-            email: user?.email,
-          }
-        ]);
+        .from("profiles")
+        .update({ display_name: displayName })
+        .eq("user_id", user.id);
 
       if (error) throw error;
 
@@ -78,7 +76,7 @@ export default function Profile() {
 
       fetchProfile();
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error("Error updating profile:", error);
       toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",

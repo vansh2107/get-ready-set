@@ -1,7 +1,7 @@
 project_id = "rndunloczfpfbubuwffb"
 
 [functions.scan-document]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-document-analysis]
 verify_jwt = true
