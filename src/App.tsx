@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Documents from "./pages/Documents";
 import DocumentDetail from "./pages/DocumentDetail";
+import EditDocument from "./pages/EditDocument";
 import Scan from "./pages/Scan";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
@@ -47,6 +48,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <DocumentDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/document/:id/edit" 
+              element={
+                <ProtectedRoute>
+                  <EditDocument />
                 </ProtectedRoute>
               } 
             />

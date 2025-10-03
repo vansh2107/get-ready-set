@@ -55,10 +55,20 @@ export default function DocumentDetail() {
         .from('documents')
         .select('*')
         .eq('id', id)
-        .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      
+      if (!data) {
+        toast({
+          title: "Error",
+          description: "Document not found or you don't have permission to view it.",
+          variant: "destructive",
+        });
+        navigate('/documents');
+        return;
+      }
+      
       setDocument(data);
     } catch (error) {
       console.error('Error fetching document:', error);
@@ -79,8 +89,7 @@ export default function DocumentDetail() {
       const { error } = await supabase
         .from('documents')
         .delete()
-        .eq('id', id)
-        .eq('user_id', user?.id);
+        .eq('id', id);
 
       if (error) throw error;
 
@@ -241,9 +250,12 @@ export default function DocumentDetail() {
             <CardTitle>Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button className="w-full justify-start gap-2" disabled>
+            <Button 
+              className="w-full justify-start gap-2" 
+              onClick={() => navigate(`/document/${id}/edit`)}
+            >
               <Edit2 className="h-4 w-4" />
-              Edit Document (Coming Soon)
+              Edit Document
             </Button>
             
             <AlertDialog>

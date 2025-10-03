@@ -193,6 +193,7 @@ export default function Scan() {
             renewal_period_days: validatedData.renewal_period_days,
             notes: validatedData.notes,
             user_id: user?.id,
+            organization_id: selectedOrg === "personal" ? null : selectedOrg,
           }
         ])
         .select()
