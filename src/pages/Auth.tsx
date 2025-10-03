@@ -20,6 +20,7 @@ const authSchema = z.object({
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [country, setCountry] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -137,6 +138,39 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <select
+                    id="country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    required
+                    disabled={loading}
+                  >
+                    <option value="">Select your country</option>
+                    <option value="US">United States</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="CA">Canada</option>
+                    <option value="AU">Australia</option>
+                    <option value="IN">India</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="IT">Italy</option>
+                    <option value="ES">Spain</option>
+                    <option value="BR">Brazil</option>
+                    <option value="MX">Mexico</option>
+                    <option value="JP">Japan</option>
+                    <option value="CN">China</option>
+                    <option value="KR">South Korea</option>
+                    <option value="SG">Singapore</option>
+                    <option value="AE">United Arab Emirates</option>
+                    <option value="ZA">South Africa</option>
+                    <option value="NG">Nigeria</option>
+                    <option value="KE">Kenya</option>
+                    <option value="EG">Egypt</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <Input
                     id="password"
@@ -173,6 +207,39 @@ export default function Auth() {
                     required
                     disabled={loading}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-country">Country</Label>
+                  <select
+                    id="signup-country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    required
+                    disabled={loading}
+                  >
+                    <option value="">Select your country</option>
+                    <option value="US">United States</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="CA">Canada</option>
+                    <option value="AU">Australia</option>
+                    <option value="IN">India</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="IT">Italy</option>
+                    <option value="ES">Spain</option>
+                    <option value="BR">Brazil</option>
+                    <option value="MX">Mexico</option>
+                    <option value="JP">Japan</option>
+                    <option value="CN">China</option>
+                    <option value="KR">South Korea</option>
+                    <option value="SG">Singapore</option>
+                    <option value="AE">United Arab Emirates</option>
+                    <option value="ZA">South Africa</option>
+                    <option value="NG">Nigeria</option>
+                    <option value="KE">Kenya</option>
+                    <option value="EG">Egypt</option>
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>

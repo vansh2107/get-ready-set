@@ -345,20 +345,14 @@ export default function Scan() {
                   onLoadedMetadata={startCamera}
                 />
               </div>
-              <div className="flex gap-2">
-                <Button onClick={captureImage} className="flex-1">
-                  <Camera className="h-4 w-4 mr-2" />
-                  Capture
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex-1"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Image
+              </Button>
               <input
                 ref={fileInputRef}
                 type="file"
