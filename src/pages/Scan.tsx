@@ -13,7 +13,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { BulkDocumentUpload } from "@/components/document/BulkDocumentUpload";
 
 const documentSchema = z.object({
   name: z.string().min(1, "Document name is required"),
@@ -29,7 +28,7 @@ export default function Scan() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [scanMode, setScanMode] = useState<"camera" | "manual" | "bulk">("bulk");
+  const [scanMode, setScanMode] = useState<"camera" | "manual">("camera");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -248,9 +247,9 @@ export default function Scan() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Add Documents</h1>
+            <h1 className="text-2xl font-bold text-foreground">Add Document</h1>
             <p className="text-muted-foreground">
-              {scanMode === "bulk" ? "Bulk upload" : scanMode === "camera" ? "Scan or upload" : "Manual entry"}
+              {scanMode === "camera" ? "Scan or upload" : "Manual entry"}
             </p>
           </div>
         </div>
@@ -288,18 +287,6 @@ export default function Scan() {
         {/* Mode Toggle */}
         <div className="flex gap-2">
           <Button
-            variant={scanMode === "bulk" ? "default" : "outline"}
-            onClick={() => {
-              setScanMode("bulk");
-              stopCamera();
-              setCapturedImage(null);
-            }}
-            className="flex-1"
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Bulk Upload
-          </Button>
-          <Button
             variant={scanMode === "camera" ? "default" : "outline"}
             onClick={() => {
               setScanMode("camera");
@@ -323,15 +310,6 @@ export default function Scan() {
             Manual
           </Button>
         </div>
-
-        {/* Bulk Upload Section */}
-        {scanMode === "bulk" && (
-          <BulkDocumentUpload 
-            userId={user?.id || ''} 
-            organizationId={selectedOrg === "personal" ? null : selectedOrg}
-            onComplete={() => navigate('/documents')}
-          />
-        )}
 
         {/* Camera/Upload Section */}
         {scanMode === "camera" && !capturedImage && (
