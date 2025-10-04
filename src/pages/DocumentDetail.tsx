@@ -99,11 +99,11 @@ export default function DocumentDetail() {
       });
       
       navigate('/documents');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting document:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete document. Please try again.",
+        title: "Delete failed",
+        description: error?.message || "Failed to delete document. Please try again.",
         variant: "destructive",
       });
     } finally {

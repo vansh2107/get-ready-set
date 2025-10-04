@@ -117,11 +117,11 @@ export default function EditDocument() {
       });
 
       navigate(`/document/${id}`);
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof z.ZodError) {
         setError(err.errors[0].message);
       } else {
-        setError("Failed to update document. Please try again.");
+        setError(err?.message || "Failed to update document. Please try again.");
         console.error('Error updating document:', err);
       }
     } finally {
