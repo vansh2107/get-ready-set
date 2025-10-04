@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Settings, Bell, Shield, LogOut, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
@@ -16,7 +16,19 @@ import { FeedbackDialog } from "@/components/feedback/FeedbackDialog";
 interface Profile {
   id: string;
   display_name: string | null;
+  country: string | null;
 }
+
+const COUNTRIES = [
+  "United States", "United Kingdom", "Canada", "Australia", "Germany", "France", 
+  "Spain", "Italy", "Netherlands", "Belgium", "Switzerland", "Austria", "Sweden",
+  "Norway", "Denmark", "Finland", "Ireland", "Portugal", "Greece", "Poland",
+  "Czech Republic", "Hungary", "Romania", "Japan", "South Korea", "China",
+  "India", "Singapore", "Malaysia", "Thailand", "Vietnam", "Indonesia",
+  "Philippines", "New Zealand", "Mexico", "Brazil", "Argentina", "Chile",
+  "Colombia", "Peru", "South Africa", "Egypt", "Nigeria", "Kenya", "UAE",
+  "Saudi Arabia", "Israel", "Turkey", "Russia", "Ukraine", "Other"
+];
 
 export default function Profile() {
   const { user, signOut } = useAuth();
@@ -25,6 +37,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [displayName, setDisplayName] = useState("");
+  const [country, setCountry] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -38,13 +51,14 @@ export default function Profile() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, display_name, user_id, created_at, updated_at")
+        .select("id, display_name, country, user_id, created_at, updated_at")
         .eq("user_id", user.id)
         .single();
 
       if (error) throw error;
       setProfile(data);
       setDisplayName(data.display_name || "");
+      setCountry(data.country || "");
     } catch (error) {
       console.error("Error fetching profile:", error);
       toast({
@@ -64,7 +78,10 @@ export default function Profile() {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ display_name: displayName })
+        .update({ 
+          display_name: displayName,
+          country: country || null
+        })
         .eq("user_id", user.id);
 
       if (error) throw error;
@@ -117,12 +134,12 @@ export default function Profile() {
       </header>
 
       <main className="px-4 py-6 space-y-6">
-        {/* Profile Information */}
+        {/* Profile Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Profile Information
+              <Settings className="h-5 w-5" />
+              Account Settings
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -134,6 +151,22 @@ export default function Profile() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Enter your display name"
               />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="country">Country</Label>
+              <Select value={country} onValueChange={setCountry}>
+                <SelectTrigger id="country">
+                  <SelectValue placeholder="Select your country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COUNTRIES.map((countryName) => (
+                    <SelectItem key={countryName} value={countryName}>
+                      {countryName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="space-y-2">
@@ -160,24 +193,18 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {/* Settings */}
+        {/* Preferences */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Settings
+              <Bell className="h-5 w-5" />
+              Notification Preferences
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Button variant="outline" className="w-full justify-start gap-2" disabled>
-              <Bell className="h-4 w-4" />
-              Notification Preferences (Coming Soon)
-            </Button>
-            
-            <Button variant="outline" className="w-full justify-start gap-2" disabled>
-              <Shield className="h-4 w-4" />
-              Security Settings (Coming Soon)
-            </Button>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Notification settings coming soon. You'll be able to customize reminder timings and delivery methods.
+            </p>
           </CardContent>
         </Card>
 
@@ -212,14 +239,10 @@ export default function Profile() {
           <CardHeader>
             <CardTitle>About</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent>
             <div className="flex justify-between">
               <span className="text-muted-foreground">App Version</span>
               <span className="text-foreground">1.0.0</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Phase</span>
-              <span className="text-foreground">Phase 6 - AI Evolution</span>
             </div>
           </CardContent>
         </Card>
