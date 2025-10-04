@@ -124,8 +124,18 @@ export default function Scan() {
     setError("");
     
     try {
+      // Fetch user's country from profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('country')
+        .eq('user_id', user?.id)
+        .single();
+
       const { data, error } = await supabase.functions.invoke("scan-document", {
-        body: { imageBase64 },
+        body: { 
+          imageBase64,
+          country: profileData?.country || null
+        },
       });
 
       if (error) throw error;

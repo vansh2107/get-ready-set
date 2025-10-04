@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64 } = await req.json();
+    const { imageBase64, country } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -31,20 +31,39 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a document data extraction assistant. Extract the following information from document images:
+            content: `You are a document data extraction and renewal analysis assistant. Extract document information and intelligently determine renewal reminder periods based on document type and country-specific regulations.
+
+Extract the following information:
 - document_type: one of (license, passport, permit, insurance, certification, other)
 - name: the document name/title
 - issuing_authority: the organization that issued the document
 - expiry_date: expiration date in YYYY-MM-DD format
-- renewal_period_days: suggested days before expiry to remind (default 30)
+- renewal_period_days: INTELLIGENT suggestion for reminder days before expiry
 
-Respond ONLY with valid JSON in this exact format:
+For renewal_period_days, consider:
+1. Document type urgency and processing time
+2. Country-specific renewal regulations and processing times
+3. Common practices in that country
+4. Complexity of renewal process
+
+Examples:
+- Passports: 90-180 days (international travel documents need early renewal)
+- Driver's Licenses: 30-60 days (varies by country)
+- Insurance: 30-45 days (need time for quotes comparison)
+- Work Permits/Visas: 60-90 days (government processing delays)
+- Professional Certifications: 60-90 days (may require exams/courses)
+- Vehicle Registration: 30 days
+- Simple permits: 14-30 days
+
+${country ? `User is in: ${country}. Consider this country's specific renewal timelines and regulations.` : 'Country unknown - use general best practices.'}
+
+Respond ONLY with valid JSON:
 {
   "document_type": "license",
   "name": "Driver's License",
   "issuing_authority": "Department of Motor Vehicles",
   "expiry_date": "2025-12-31",
-  "renewal_period_days": 30
+  "renewal_period_days": 45
 }`,
           },
           {
@@ -52,7 +71,7 @@ Respond ONLY with valid JSON in this exact format:
             content: [
               {
                 type: "text",
-                text: "Extract the document information from this image.",
+                text: `Extract the document information from this image and determine an intelligent renewal reminder period based on the document type${country ? ` and ${country}'s regulations` : ''}.`,
               },
               {
                 type: "image_url",
