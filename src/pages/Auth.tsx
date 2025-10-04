@@ -11,18 +11,31 @@ import { Loader2, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { z } from "zod";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(12, "Password must be at least 12 characters"),
 });
 
+const COUNTRIES = [
+  "United States", "United Kingdom", "Canada", "Australia", "Germany", "France", 
+  "Spain", "Italy", "Netherlands", "Belgium", "Switzerland", "Austria", "Sweden",
+  "Norway", "Denmark", "Finland", "Ireland", "Portugal", "Greece", "Poland",
+  "Czech Republic", "Japan", "South Korea", "Singapore", "India", "Brazil",
+  "Mexico", "Argentina", "Chile", "Colombia", "Other"
+];
+
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [country, setCountry] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -32,6 +45,33 @@ export default function Auth() {
     }
   }, [user, navigate]);
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/`,
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess("Password reset link sent! Check your email.");
+        setTimeout(() => {
+          setForgotPasswordOpen(false);
+          setResetEmail("");
+        }, 2000);
+      }
+    } catch (err) {
+      setError("Failed to send reset email");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -40,13 +80,23 @@ export default function Auth() {
 
     try {
       const validation = authSchema.parse({ email, password });
+      
+      if (!country) {
+        setError("Please select your country");
+        setLoading(false);
+        return;
+      }
+
       const redirectUrl = `${window.location.origin}/`;
 
       const { error } = await supabase.auth.signUp({
         email: validation.email,
         password: validation.password,
         options: {
-          emailRedirectTo: redirectUrl
+          emailRedirectTo: redirectUrl,
+          data: {
+            country: country
+          }
         }
       });
 
@@ -160,6 +210,18 @@ export default function Auth() {
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sign In
                 </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="w-full text-sm"
+                  onClick={() => {
+                    setForgotPasswordOpen(true);
+                    setError("");
+                    setSuccess("");
+                  }}
+                >
+                  Forgot password?
+                </Button>
               </form>
             </TabsContent>
             
@@ -192,6 +254,21 @@ export default function Auth() {
                     Must be at least 12 characters for security
                   </p>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Select value={country} onValueChange={setCountry} disabled={loading}>
+                    <SelectTrigger id="country">
+                      <SelectValue placeholder="Select your country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COUNTRIES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 {error && (
                   <Alert variant="destructive">
                     <AlertDescription>{error}</AlertDescription>
@@ -211,6 +288,45 @@ export default function Auth() {
           </Tabs>
         </CardContent>
       </Card>
+
+      <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+            <DialogDescription>
+              Enter your email address and we'll send you a link to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+                disabled={loading}
+              />
+            </div>
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            {success && (
+              <Alert>
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Send Reset Link
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
