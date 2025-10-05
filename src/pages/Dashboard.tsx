@@ -137,71 +137,80 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b border-border px-4 py-6">
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back! Here's your document overview.</p>
+      <header className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border-b border-border/50 px-4 py-8 animate-fade-in">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold text-gradient mb-2">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back! Here's your document overview.</p>
+        </div>
       </header>
 
-      <main className="px-4 py-6 space-y-6">
+      <main className="px-4 py-6 space-y-6 max-w-4xl mx-auto">
         {/* Stats Cards */}
-        <DocumentStats
-          total={stats.total}
-          expiringSoon={stats.expiringSoon}
-          expired={stats.expired}
-          valid={stats.valid}
-        />
+        <div className="animate-slide-up">
+          <DocumentStats
+            total={stats.total}
+            expiringSoon={stats.expiringSoon}
+            expired={stats.expired}
+            valid={stats.valid}
+          />
+        </div>
 
         {/* Charts */}
-        <div className="space-y-4">
+        <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <DocumentTypeChart data={typeData} />
           <ExpiryTimeline data={timelineData} />
         </div>
 
         {/* Quick Action */}
-        <Link to="/scan">
-          <Button className="w-full" size="lg">
-            <Camera className="h-5 w-5 mr-2" />
-            Scan New Document
-          </Button>
-        </Link>
+        <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <Link to="/scan">
+            <Button className="w-full btn-glow" size="lg">
+              <Camera className="h-5 w-5 mr-2" />
+              Scan New Document
+            </Button>
+          </Link>
+        </div>
 
         {/* Recent Documents */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Documents</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentDocuments.length === 0 ? (
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No documents yet</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Add your first document to get started
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {recentDocuments.map((doc) => (
-                  <Link
-                    key={doc.id}
-                    to={`/document/${doc.id}`}
-                    className="block p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-foreground">{doc.name}</h3>
-                        <p className="text-sm text-muted-foreground capitalize">
-                          {doc.document_type.replace('_', ' ')} • Expires {new Date(doc.expiry_date).toLocaleDateString()}
-                        </p>
+        <div className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentDocuments.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-float" />
+                  <p className="text-muted-foreground font-medium">No documents yet</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Add your first document to get started
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentDocuments.map((doc, index) => (
+                    <Link
+                      key={doc.id}
+                      to={`/document/${doc.id}`}
+                      className="block p-4 border border-border rounded-xl hover:border-primary/50 smooth hover:shadow-lg"
+                      style={{ animationDelay: `${0.1 * index}s` }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-foreground mb-1">{doc.name}</h3>
+                          <p className="text-sm text-muted-foreground capitalize">
+                            {doc.document_type.replace('_', ' ')} • Expires {new Date(doc.expiry_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        {getStatusBadge(doc.expiry_date)}
                       </div>
-                      {getStatusBadge(doc.expiry_date)}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </main>
 
       <BottomNavigation />

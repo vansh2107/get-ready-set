@@ -14,8 +14,8 @@ export function BottomNavigation() {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
-      <div className="flex justify-around py-2">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-xl border-t border-border/50 z-50 shadow-2xl">
+      <div className="flex justify-around py-3 px-2">
         {navigation.map((item) => {
           const isActive = location.pathname === item.href;
           return (
@@ -23,14 +23,20 @@ export function BottomNavigation() {
               key={item.name}
               to={item.href}
               className={cn(
-                "flex flex-col items-center justify-center px-3 py-2 text-xs font-medium rounded-lg transition-colors",
+                "flex flex-col items-center justify-center px-4 py-2 text-xs font-medium rounded-xl smooth relative",
                 isActive
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <item.icon className="h-5 w-5 mb-1" />
-              <span>{item.name}</span>
+              {isActive && (
+                <div className="absolute inset-0 bg-primary/10 rounded-xl -z-10 animate-scale-in" />
+              )}
+              <item.icon className={cn(
+                "h-6 w-6 mb-1 smooth",
+                isActive && "scale-110"
+              )} />
+              <span className="font-medium">{item.name}</span>
             </Link>
           );
         })}
