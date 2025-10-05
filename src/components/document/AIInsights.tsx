@@ -39,7 +39,7 @@ export function AIInsights({ document }: { document: Document }) {
     fetchUserCountry();
   }, []);
 
-  const analyzeDocument = async (type: 'classify' | 'renewal_prediction' | 'priority_scoring' | 'cost_estimate' | 'compliance_check' | 'full_analysis') => {
+  const analyzeDocument = async (type: 'classify' | 'renewal_prediction' | 'priority_scoring' | 'cost_estimate' | 'compliance_check' | 'full_analysis' | 'renewal_requirements') => {
     setLoading(true);
     try {
       const daysUntilExpiry = Math.ceil(
@@ -88,15 +88,29 @@ export function AIInsights({ document }: { document: Document }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Prominent Renewal Requirements Button */}
         <Button
           variant="default"
+          onClick={() => analyzeDocument('renewal_requirements')}
+          disabled={loading}
+          className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+          size="lg"
+        >
+          {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <FileCheck className="h-5 w-5 mr-2" />}
+          Get Renewal Requirements Checklist
+        </Button>
+
+        <Separator />
+
+        <Button
+          variant="outline"
           onClick={() => analyzeDocument('full_analysis')}
           disabled={loading}
           className="w-full"
           size="lg"
         >
           {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
-          Generate Complete AI Analysis
+          Complete AI Analysis
         </Button>
 
         <Separator />
@@ -161,6 +175,7 @@ export function AIInsights({ document }: { document: Document }) {
                 {insights.type === 'priority_scoring' && '⚡ Priority Assessment'}
                 {insights.type === 'cost_estimate' && '💰 Cost Estimation'}
                 {insights.type === 'compliance_check' && '✅ Compliance Analysis'}
+                {insights.type === 'renewal_requirements' && '📝 Renewal Requirements Checklist'}
                 {insights.type === 'full_analysis' && '🎯 Complete AI Analysis'}
               </h4>
               {insights.data.urgencyLevel && (
@@ -364,6 +379,75 @@ export function AIInsights({ document }: { document: Document }) {
                         </li>
                       ))}
                     </ol>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {insights.type === 'renewal_requirements' && (
+              <div className="space-y-4">
+                {insights.data.requiredDocuments && insights.data.requiredDocuments.length > 0 && (
+                  <div className="space-y-3">
+                    <h5 className="font-medium text-sm flex items-center gap-2">
+                      📋 Required Documents & Items
+                    </h5>
+                    {insights.data.requiredDocuments.map((category: any, i: number) => (
+                      <div key={i} className="p-3 bg-background rounded border">
+                        <p className="text-sm font-semibold mb-2 text-primary">{category.category}</p>
+                        <ul className="space-y-1.5">
+                          {category.items.map((item: string, j: number) => (
+                            <li key={j} className="text-xs text-muted-foreground flex items-start gap-2">
+                              <span className="text-accent font-bold mt-0.5">✓</span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {insights.data.whereToApply && (
+                  <div className="p-3 bg-primary/5 rounded border border-primary/20">
+                    <p className="text-xs font-medium mb-1 text-primary">📍 Where to Apply</p>
+                    <p className="text-sm text-foreground">{insights.data.whereToApply}</p>
+                  </div>
+                )}
+
+                {insights.data.processingSteps && insights.data.processingSteps.length > 0 && (
+                  <div className="pt-3 border-t space-y-2">
+                    <h5 className="font-medium text-sm">🔄 Processing Steps</h5>
+                    <ol className="space-y-2">
+                      {insights.data.processingSteps.map((step: string, i: number) => (
+                        <li key={i} className="text-xs text-muted-foreground flex gap-2">
+                          <Badge variant="outline" className="h-5 w-5 flex items-center justify-center p-0 text-xs shrink-0">
+                            {i + 1}
+                          </Badge>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+
+                {insights.data.estimatedTimeframe && (
+                  <div className="p-3 bg-background rounded border">
+                    <p className="text-xs font-medium mb-1">⏱️ Estimated Processing Time</p>
+                    <p className="text-sm text-muted-foreground">{insights.data.estimatedTimeframe}</p>
+                  </div>
+                )}
+
+                {insights.data.importantNotes && insights.data.importantNotes.length > 0 && (
+                  <div className="pt-3 border-t">
+                    <h5 className="font-medium text-sm text-warning mb-2">⚠️ Important Notes</h5>
+                    <ul className="space-y-1.5">
+                      {insights.data.importantNotes.map((note: string, i: number) => (
+                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                          <span className="text-warning mt-0.5">•</span>
+                          <span>{note}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </div>

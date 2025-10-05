@@ -35,7 +35,7 @@ serve(async (req) => {
       );
     }
     
-    const validAnalysisTypes = ['classify', 'renewal_prediction', 'cost_estimate', 'priority_scoring', 'full_analysis', 'renewal_suggestions'];
+    const validAnalysisTypes = ['classify', 'renewal_prediction', 'cost_estimate', 'priority_scoring', 'full_analysis', 'renewal_suggestions', 'renewal_requirements'];
     if (!validAnalysisTypes.includes(analysisType)) {
       console.error('Invalid analysis type:', analysisType);
       return new Response(
@@ -263,6 +263,45 @@ Deliver: comprehensive overview, key insights, priority assessment, cost conside
         },
         actionPlan: { type: "array", items: { type: "string" }, description: "Step-by-step action plan" },
         urgencyLevel: { type: "string", enum: ["low", "medium", "high", "critical"] }
+      };
+      
+    } else if (analysisType === "renewal_requirements") {
+      systemPrompt = "You are a document renewal specialist with expertise in identifying exact documents, items, and requirements needed for renewals across different countries and jurisdictions.";
+      userPrompt = `Identify all documents and items required for renewal of this document:
+Document: ${documentData.name}
+Type: ${documentData.document_type}
+Expiry Date: ${documentData.expiry_date}
+Days Until Expiry: ${documentData.daysUntilExpiry}
+Issuing Authority: ${documentData.issuing_authority || 'Unknown'}${countryContext}
+
+Provide a comprehensive checklist of:
+1. Required documents (originals, copies, certified copies)
+2. Personal identification needed
+3. Photos/images specifications (if any)
+4. Fees and payment methods
+5. Forms that need to be filled
+6. Any medical certificates or tests required
+7. Proof of residence or other supporting documents
+8. Additional requirements specific to the document type and country
+
+Be specific, practical, and include quantity requirements (e.g., "2 passport-sized photos", "Original birth certificate plus 1 copy").`;
+      
+      toolParameters = {
+        requiredDocuments: { 
+          type: "array", 
+          items: { 
+            type: "object",
+            properties: {
+              category: { type: "string", description: "Category like 'Identity Proof', 'Photos', 'Fees', etc." },
+              items: { type: "array", items: { type: "string" }, description: "List of specific items" }
+            }
+          },
+          description: "Categorized list of required documents and items" 
+        },
+        processingSteps: { type: "array", items: { type: "string" }, description: "Step-by-step process for renewal" },
+        importantNotes: { type: "array", items: { type: "string" }, description: "Critical things to remember" },
+        estimatedTimeframe: { type: "string", description: "Expected processing time" },
+        whereToApply: { type: "string", description: "Where to submit the renewal application" }
       };
     }
 
