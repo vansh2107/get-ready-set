@@ -10,7 +10,6 @@ import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { DocumentStats } from "@/components/dashboard/DocumentStats";
 
 import { ExpiryTimeline } from "@/components/dashboard/ExpiryTimeline";
-import { AIRenewalSuggestions } from "@/components/dashboard/AIRenewalSuggestions";
 
 interface Document {
   id: string;
@@ -145,9 +144,8 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* AI Renewal Suggestions and Timeline */}
-        <div className="grid grid-cols-1 gap-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <AIRenewalSuggestions documents={documents} />
+        {/* Expiry Timeline */}
+        <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <ExpiryTimeline data={timelineData} />
         </div>
 
