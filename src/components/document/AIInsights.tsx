@@ -19,7 +19,7 @@ type Document = {
 
 export function AIInsights({ document }: { document: Document }) {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [loadingType, setLoadingType] = useState<string | null>(null);
   const [insights, setInsights] = useState<any>(null);
   const [userCountry, setUserCountry] = useState<string | null>(null);
 
@@ -40,7 +40,7 @@ export function AIInsights({ document }: { document: Document }) {
   }, []);
 
   const analyzeDocument = async (type: 'classify' | 'renewal_prediction' | 'priority_scoring' | 'cost_estimate' | 'compliance_check' | 'full_analysis' | 'renewal_requirements') => {
-    setLoading(true);
+    setLoadingType(type);
     setInsights(null); // Clear previous insights
     try {
       const daysUntilExpiry = Math.ceil(
@@ -73,7 +73,7 @@ export function AIInsights({ document }: { document: Document }) {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setLoadingType(null);
     }
   };
 
@@ -93,11 +93,11 @@ export function AIInsights({ document }: { document: Document }) {
         <Button
           variant="default"
           onClick={() => analyzeDocument('renewal_requirements')}
-          disabled={loading}
+          disabled={loadingType !== null}
           className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
           size="lg"
         >
-          {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <FileCheck className="h-5 w-5 mr-2" />}
+          {loadingType === 'renewal_requirements' ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <FileCheck className="h-5 w-5 mr-2" />}
           Get Renewal Requirements Checklist
         </Button>
 
@@ -106,11 +106,11 @@ export function AIInsights({ document }: { document: Document }) {
         <Button
           variant="outline"
           onClick={() => analyzeDocument('full_analysis')}
-          disabled={loading}
+          disabled={loadingType !== null}
           className="w-full"
           size="lg"
         >
-          {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
+          {loadingType === 'full_analysis' ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
           Complete AI Analysis
         </Button>
 
@@ -120,28 +120,28 @@ export function AIInsights({ document }: { document: Document }) {
           <Button
             variant="outline"
             onClick={() => analyzeDocument('classify')}
-            disabled={loading}
+            disabled={loadingType !== null}
             size="sm"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Lightbulb className="h-4 w-4 mr-2" />}
+            {loadingType === 'classify' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Lightbulb className="h-4 w-4 mr-2" />}
             Classification
           </Button>
           <Button
             variant="outline"
             onClick={() => analyzeDocument('renewal_prediction')}
-            disabled={loading}
+            disabled={loadingType !== null}
             size="sm"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <TrendingUp className="h-4 w-4 mr-2" />}
+            {loadingType === 'renewal_prediction' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <TrendingUp className="h-4 w-4 mr-2" />}
             Renewal Tips
           </Button>
           <Button
             variant="outline"
             onClick={() => analyzeDocument('priority_scoring')}
-            disabled={loading}
+            disabled={loadingType !== null}
             size="sm"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <AlertTriangle className="h-4 w-4 mr-2" />}
+            {loadingType === 'priority_scoring' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <AlertTriangle className="h-4 w-4 mr-2" />}
             Priority
           </Button>
         </div>
@@ -150,19 +150,19 @@ export function AIInsights({ document }: { document: Document }) {
           <Button
             variant="outline"
             onClick={() => analyzeDocument('cost_estimate')}
-            disabled={loading}
+            disabled={loadingType !== null}
             size="sm"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <DollarSign className="h-4 w-4 mr-2" />}
+            {loadingType === 'cost_estimate' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <DollarSign className="h-4 w-4 mr-2" />}
             Cost Estimate
           </Button>
           <Button
             variant="outline"
             onClick={() => analyzeDocument('compliance_check')}
-            disabled={loading}
+            disabled={loadingType !== null}
             size="sm"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileCheck className="h-4 w-4 mr-2" />}
+            {loadingType === 'compliance_check' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileCheck className="h-4 w-4 mr-2" />}
             Compliance Check
           </Button>
         </div>
