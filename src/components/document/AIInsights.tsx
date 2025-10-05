@@ -41,6 +41,7 @@ export function AIInsights({ document }: { document: Document }) {
 
   const analyzeDocument = async (type: 'classify' | 'renewal_prediction' | 'priority_scoring' | 'cost_estimate' | 'compliance_check' | 'full_analysis' | 'renewal_requirements') => {
     setLoading(true);
+    setInsights(null); // Clear previous insights
     try {
       const daysUntilExpiry = Math.ceil(
         (new Date(document.expiry_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)

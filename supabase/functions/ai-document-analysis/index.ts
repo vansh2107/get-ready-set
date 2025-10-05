@@ -35,7 +35,7 @@ serve(async (req) => {
       );
     }
     
-    const validAnalysisTypes = ['classify', 'renewal_prediction', 'cost_estimate', 'priority_scoring', 'full_analysis', 'renewal_suggestions', 'renewal_requirements'];
+    const validAnalysisTypes = ['classify', 'renewal_prediction', 'cost_estimate', 'priority_scoring', 'full_analysis', 'renewal_suggestions', 'renewal_requirements', 'compliance_check'];
     if (!validAnalysisTypes.includes(analysisType)) {
       console.error('Invalid analysis type:', analysisType);
       return new Response(
