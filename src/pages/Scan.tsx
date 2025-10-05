@@ -45,6 +45,7 @@ export default function Scan() {
     expiry_date: "",
     renewal_period_days: 30,
     notes: "",
+    custom_reminder_date: "",
   });
 
   useEffect(() => {
@@ -175,6 +176,7 @@ export default function Scan() {
       expiry_date: "",
       renewal_period_days: 30,
       notes: "",
+      custom_reminder_date: "",
     });
     if (scanMode === "camera") {
       startCamera();
@@ -242,8 +244,25 @@ export default function Scan() {
 
       if (error) throw error;
 
-      // Create multi-stage reminders (30, 14, 7, 1 day before expiry)
-      const reminderStages = [30, 14, 7, 1];
+      // Create 3 AI-based intelligent reminders based on renewal period
+      const renewalDays = validatedData.renewal_period_days;
+      let reminderStages: number[] = [];
+      
+      // AI-based logic: Create smart reminders based on renewal period
+      if (renewalDays >= 90) {
+        // Long renewal periods: 60, 30, 7 days
+        reminderStages = [60, 30, 7];
+      } else if (renewalDays >= 30) {
+        // Medium renewal periods: 30, 14, 3 days
+        reminderStages = [30, 14, 3];
+      } else if (renewalDays >= 14) {
+        // Short renewal periods: 14, 7, 2 days
+        reminderStages = [14, 7, 2];
+      } else {
+        // Very short: 7, 3, 1 days
+        reminderStages = [7, 3, 1];
+      }
+      
       const reminders = reminderStages.map(days => {
         const reminderDate = new Date(validatedData.expiry_date);
         reminderDate.setDate(reminderDate.getDate() - days);
@@ -253,6 +272,15 @@ export default function Scan() {
           reminder_date: reminderDate.toISOString().split('T')[0],
         };
       });
+      
+      // Add custom reminder if provided
+      if (formData.custom_reminder_date) {
+        reminders.push({
+          document_id: data.id,
+          user_id: user?.id,
+          reminder_date: formData.custom_reminder_date,
+        });
+      }
 
       await supabase.from('reminders').insert(reminders);
 
@@ -493,6 +521,21 @@ export default function Scan() {
                 />
                 <p className="text-sm text-muted-foreground">
                   {formData.notes?.length || 0}/5000 characters
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="custom_reminder_date">
+                  Custom Reminder (Optional)
+                </Label>
+                <Input
+                  id="custom_reminder_date"
+                  type="date"
+                  value={formData.custom_reminder_date}
+                  onChange={(e) => handleInputChange("custom_reminder_date", e.target.value)}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Add an extra reminder for important dates (3 automatic AI reminders will also be set)
                 </p>
               </div>
 
