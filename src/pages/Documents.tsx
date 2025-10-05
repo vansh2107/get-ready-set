@@ -70,7 +70,7 @@ export default function Documents() {
 
   useEffect(() => {
     applyFilters();
-  }, [documents, searchQuery, filterType, filterStatus]);
+  }, [documents, searchQuery, filterType, filterStatus, sortBy]);
 
   const applyFilters = () => {
     let filtered = [...documents];
@@ -102,6 +102,20 @@ export default function Documents() {
       });
     }
 
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "expiry_date":
+          return new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime();
+        case "document_type":
+          return a.document_type.localeCompare(b.document_type);
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+
     setFilteredDocuments(filtered);
   };
 
@@ -112,10 +126,6 @@ export default function Documents() {
       description: "Your documents have been exported to CSV.",
     });
   };
-
-  useEffect(() => {
-    filterAndSortDocuments();
-  }, [documents, searchQuery, sortBy, filterType]);
 
   const fetchDocuments = async () => {
     try {
@@ -132,33 +142,6 @@ export default function Documents() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const filterAndSortDocuments = () => {
-    let filtered = documents.filter(doc =>
-      doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.document_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (doc.issuing_authority?.toLowerCase().includes(searchQuery.toLowerCase()) || false)
-    );
-
-    if (filterType !== "all") {
-      filtered = filtered.filter(doc => doc.document_type === filterType);
-    }
-
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          return a.name.localeCompare(b.name);
-        case "expiry_date":
-          return new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime();
-        case "document_type":
-          return a.document_type.localeCompare(b.document_type);
-        default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      }
-    });
-
-    setFilteredDocuments(filtered);
   };
 
   const getStatusBadge = (expiryDate: string) => {
