@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -37,6 +38,7 @@ export default function EditDocument() {
     expiry_date: "",
     renewal_period_days: 30,
     notes: "",
+    custom_reminder_date: "",
   });
 
   useEffect(() => {
@@ -65,6 +67,16 @@ export default function EditDocument() {
         return;
       }
 
+      // Fetch existing custom reminder
+      const { data: reminderData } = await supabase
+        .from('reminders')
+        .select('reminder_date')
+        .eq('document_id', id)
+        .eq('user_id', user?.id)
+        .order('reminder_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
       setFormData({
         name: data.name || "",
         document_type: data.document_type || "",
@@ -72,6 +84,7 @@ export default function EditDocument() {
         expiry_date: data.expiry_date || "",
         renewal_period_days: data.renewal_period_days || 30,
         notes: data.notes || "",
+        custom_reminder_date: reminderData?.reminder_date || "",
       });
     } catch (error) {
       console.error('Error fetching document:', error);
@@ -111,6 +124,25 @@ export default function EditDocument() {
 
       if (error) throw error;
 
+      // Delete existing custom reminders for this document
+      await supabase
+        .from('reminders')
+        .delete()
+        .eq('document_id', id)
+        .eq('user_id', user?.id);
+
+      // Add custom reminder if provided
+      if (formData.custom_reminder_date) {
+        await supabase
+          .from('reminders')
+          .insert({
+            document_id: id,
+            user_id: user?.id,
+            reminder_date: formData.custom_reminder_date,
+            is_sent: false,
+          });
+      }
+
       toast({
         title: "Document updated",
         description: "Your document has been successfully updated.",
@@ -132,6 +164,36 @@ export default function EditDocument() {
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  // Calculate AI-based reminder dates
+  const calculateReminderDates = () => {
+    if (!formData.expiry_date || !formData.renewal_period_days) return [];
+    
+    const renewalDays = formData.renewal_period_days;
+    let reminderStages: number[] = [];
+    
+    if (renewalDays >= 90) {
+      reminderStages = [60, 30, 7];
+    } else if (renewalDays >= 30) {
+      reminderStages = [30, 14, 3];
+    } else if (renewalDays >= 14) {
+      reminderStages = [14, 7, 2];
+    } else {
+      reminderStages = [7, 3, 1];
+    }
+    
+    return reminderStages.map(days => {
+      const reminderDate = new Date(formData.expiry_date);
+      reminderDate.setDate(reminderDate.getDate() - days);
+      return {
+        days,
+        date: reminderDate.toISOString().split('T')[0],
+        formatted: reminderDate.toLocaleDateString()
+      };
+    });
+  };
+
+  const aiReminders = calculateReminderDates();
 
   if (loading) {
     return (
@@ -216,7 +278,7 @@ export default function EditDocument() {
 
               <div className="space-y-2">
                 <Label htmlFor="renewal_period_days">
-                  Reminder Days Before Expiry *
+                  Renewal Period (Days) *
                 </Label>
                 <Input
                   id="renewal_period_days"
@@ -228,9 +290,39 @@ export default function EditDocument() {
                   required
                 />
                 <p className="text-sm text-muted-foreground">
-                  You'll be reminded this many days before the document expires
+                  AI will automatically create smart reminders based on this period
                 </p>
               </div>
+
+              {/* AI-Based Reminders Preview */}
+              {aiReminders.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">🤖 AI-Powered Automatic Reminders</Label>
+                  <div className="bg-accent/20 border border-accent rounded-lg p-4 space-y-2">
+                    {aiReminders.map((reminder, index) => (
+                      <div key={index} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">
+                              {reminder.days} days before expiry
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {reminder.formatted}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant="secondary">Auto</Badge>
+                      </div>
+                    ))}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      These reminders are automatically optimized based on your renewal period
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
@@ -241,6 +333,21 @@ export default function EditDocument() {
                   placeholder="Additional notes about this document..."
                   rows={3}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="custom_reminder_date">
+                  ➕ Custom Reminder (Optional)
+                </Label>
+                <Input
+                  id="custom_reminder_date"
+                  type="date"
+                  value={formData.custom_reminder_date}
+                  onChange={(e) => handleInputChange("custom_reminder_date", e.target.value)}
+                />
+                <p className="text-sm text-muted-foreground">
+                  For those who forget easily - add your own reminder date in addition to the 3 automatic ones
+                </p>
               </div>
 
               {error && (
