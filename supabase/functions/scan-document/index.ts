@@ -11,7 +11,27 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, country } = await req.json();
+    const requestBody = await req.text();
+    
+    // Validate request size (max 15MB for base64 encoded image ~10MB actual)
+    if (requestBody.length > 15 * 1024 * 1024) {
+      console.error('Request too large:', requestBody.length);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Image too large. Maximum size is 10MB.' }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { imageBase64, country } = JSON.parse(requestBody);
+    
+    // Validate country input
+    if (country && (typeof country !== 'string' || country.length > 100)) {
+      console.error('Invalid country input');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid country format' }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -128,10 +148,11 @@ Respond ONLY with valid JSON:
     );
   } catch (error) {
     console.error("Error in scan-document function:", error);
+    // Sanitized error message for client
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error instanceof Error ? error.message : "Unknown error" 
+        error: 'Failed to process document. Please try again.' 
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

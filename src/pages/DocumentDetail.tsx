@@ -33,6 +33,7 @@ interface Document {
   notes: string;
   created_at: string;
   updated_at: string;
+  image_path: string | null;
 }
 
 export default function DocumentDetail() {
@@ -86,6 +87,13 @@ export default function DocumentDetail() {
   const handleDelete = async () => {
     setDeleting(true);
     try {
+      // Delete document image from storage if exists
+      if (document?.image_path) {
+        await supabase.storage
+          .from('document-images')
+          .remove([document.image_path]);
+      }
+
       const { error } = await supabase
         .from('documents')
         .delete()
@@ -182,6 +190,23 @@ export default function DocumentDetail() {
       </header>
 
       <main className="px-4 py-6 space-y-6">
+        {/* Document Image */}
+        {document.image_path && (
+          <Card>
+            <CardContent className="p-4">
+              <img 
+                src={`${supabase.storage.from('document-images').getPublicUrl(document.image_path).data.publicUrl}`}
+                alt={document.name}
+                className="w-full rounded-lg"
+                onError={(e) => {
+                  // Hide image on error
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Document Information */}
         <Card>
           <CardHeader>

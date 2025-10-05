@@ -183,29 +183,60 @@ export default function Scan() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+
     setLoading(true);
     setError("");
 
     try {
+      // Validate notes length
+      if (formData.notes && formData.notes.length > 5000) {
+        throw new Error('Notes cannot exceed 5000 characters');
+      }
+      
       const validatedData = documentSchema.parse({
         ...formData,
         document_type: formData.document_type as any,
       });
+      
+      // Upload image to storage if available
+      let imagePath = null;
+      if (capturedImage) {
+        const blob = await fetch(capturedImage).then(r => r.blob());
+        const fileExt = blob.type.split('/')[1];
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('document-images')
+          .upload(fileName, blob);
+          
+        if (uploadError) {
+          console.error('Error uploading image:', uploadError);
+          toast({
+            title: "Warning",
+            description: "Failed to upload document image, but document will be saved.",
+            variant: "default",
+          });
+        } else {
+          imagePath = fileName;
+        }
+      }
+
+      const selectedOrgId = selectedOrg === "personal" ? null : selectedOrg;
 
       const { data, error } = await supabase
         .from('documents')
-        .insert([
-          {
-            name: validatedData.name,
-            document_type: validatedData.document_type,
-            issuing_authority: validatedData.issuing_authority,
-            expiry_date: validatedData.expiry_date,
-            renewal_period_days: validatedData.renewal_period_days,
-            notes: validatedData.notes,
-            user_id: user?.id,
-            organization_id: selectedOrg === "personal" ? null : selectedOrg,
-          }
-        ])
+        .insert({
+          name: validatedData.name,
+          document_type: validatedData.document_type,
+          issuing_authority: validatedData.issuing_authority,
+          expiry_date: validatedData.expiry_date,
+          renewal_period_days: validatedData.renewal_period_days,
+          notes: validatedData.notes,
+          user_id: user.id,
+          organization_id: selectedOrgId,
+          image_path: imagePath,
+        })
         .select()
         .single();
 
@@ -458,7 +489,11 @@ export default function Scan() {
                   onChange={(e) => handleInputChange("notes", e.target.value)}
                   placeholder="Additional notes about this document..."
                   rows={3}
+                  maxLength={5000}
                 />
+                <p className="text-sm text-muted-foreground">
+                  {formData.notes?.length || 0}/5000 characters
+                </p>
               </div>
 
               {error && (

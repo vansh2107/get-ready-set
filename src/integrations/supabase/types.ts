@@ -97,6 +97,7 @@ export type Database = {
           document_type: Database["public"]["Enums"]["document_type"]
           expiry_date: string
           id: string
+          image_path: string | null
           issuing_authority: string | null
           name: string
           notes: string | null
@@ -110,6 +111,7 @@ export type Database = {
           document_type: Database["public"]["Enums"]["document_type"]
           expiry_date: string
           id?: string
+          image_path?: string | null
           issuing_authority?: string | null
           name: string
           notes?: string | null
@@ -123,6 +125,7 @@ export type Database = {
           document_type?: Database["public"]["Enums"]["document_type"]
           expiry_date?: string
           id?: string
+          image_path?: string | null
           issuing_authority?: string | null
           name?: string
           notes?: string | null

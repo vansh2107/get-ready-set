@@ -12,7 +12,35 @@ serve(async (req) => {
   }
 
   try {
-    const { documentData, analysisType, userCountry } = await req.json();
+    const requestBody = await req.text();
+    
+    // Validate request size
+    if (requestBody.length > 5 * 1024 * 1024) {
+      console.error('Request too large:', requestBody.length);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Request too large' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { documentData, analysisType, userCountry } = JSON.parse(requestBody);
+    
+    // Validate inputs
+    if (userCountry && (typeof userCountry !== 'string' || userCountry.length > 100)) {
+      console.error('Invalid country input');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid country format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!['classify', 'renewal_prediction', 'cost_estimate', 'priority_scoring', 'full_analysis'].includes(analysisType)) {
+      console.error('Invalid analysis type:', analysisType);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid analysis type' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -208,9 +236,10 @@ Deliver: comprehensive overview, key insights, priority assessment, cost conside
 
   } catch (error) {
     console.error("Error in ai-document-analysis:", error);
+    // Sanitized error message for client
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ success: false, error: 'Analysis failed. Please try again.' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
