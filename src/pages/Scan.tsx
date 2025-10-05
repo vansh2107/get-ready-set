@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Save, Loader2, Camera, Upload } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
@@ -306,6 +307,36 @@ export default function Scan() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Calculate AI-based reminder dates
+  const calculateReminderDates = () => {
+    if (!formData.expiry_date || !formData.renewal_period_days) return [];
+    
+    const renewalDays = formData.renewal_period_days;
+    let reminderStages: number[] = [];
+    
+    if (renewalDays >= 90) {
+      reminderStages = [60, 30, 7];
+    } else if (renewalDays >= 30) {
+      reminderStages = [30, 14, 3];
+    } else if (renewalDays >= 14) {
+      reminderStages = [14, 7, 2];
+    } else {
+      reminderStages = [7, 3, 1];
+    }
+    
+    return reminderStages.map(days => {
+      const reminderDate = new Date(formData.expiry_date);
+      reminderDate.setDate(reminderDate.getDate() - days);
+      return {
+        days,
+        date: reminderDate.toISOString().split('T')[0],
+        formatted: reminderDate.toLocaleDateString()
+      };
+    });
+  };
+
+  const aiReminders = calculateReminderDates();
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="bg-card border-b border-border px-4 py-6">
@@ -493,7 +524,7 @@ export default function Scan() {
 
               <div className="space-y-2">
                 <Label htmlFor="renewal_period_days">
-                  Reminder Days Before Expiry *
+                  Renewal Period (Days) *
                 </Label>
                 <Input
                   id="renewal_period_days"
@@ -505,9 +536,39 @@ export default function Scan() {
                   required
                 />
                 <p className="text-sm text-muted-foreground">
-                  You'll be reminded this many days before the document expires
+                  AI will automatically create smart reminders based on this period
                 </p>
               </div>
+
+              {/* AI-Based Reminders Preview */}
+              {aiReminders.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">🤖 AI-Powered Automatic Reminders</Label>
+                  <div className="bg-accent/20 border border-accent rounded-lg p-4 space-y-2">
+                    {aiReminders.map((reminder, index) => (
+                      <div key={index} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">
+                              {reminder.days} days before expiry
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {reminder.formatted}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant="secondary">Auto</Badge>
+                      </div>
+                    ))}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      These reminders are automatically optimized based on your renewal period
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
@@ -526,7 +587,7 @@ export default function Scan() {
 
               <div className="space-y-2">
                 <Label htmlFor="custom_reminder_date">
-                  Custom Reminder (Optional)
+                  ➕ Custom Reminder (Optional)
                 </Label>
                 <Input
                   id="custom_reminder_date"
@@ -535,7 +596,7 @@ export default function Scan() {
                   onChange={(e) => handleInputChange("custom_reminder_date", e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Add an extra reminder for important dates (3 automatic AI reminders will also be set)
+                  For those who forget easily - add your own reminder date in addition to the 3 automatic ones
                 </p>
               </div>
 
