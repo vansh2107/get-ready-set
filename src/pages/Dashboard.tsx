@@ -146,7 +146,7 @@ export default function Dashboard() {
 
         {/* Expiry Timeline */}
         <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <ExpiryTimeline data={timelineData} />
+          <ExpiryTimeline data={timelineData} documents={documents} />
         </div>
 
         {/* Quick Action */}
