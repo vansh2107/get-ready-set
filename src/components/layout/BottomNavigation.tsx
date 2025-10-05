@@ -1,4 +1,4 @@
-import { Home, FileText, Camera, Users, User } from "lucide-react";
+import { Home, FileText, Camera, Bell, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -6,7 +6,7 @@ const navigation = [
   { name: "Home", href: "/", icon: Home },
   { name: "Documents", href: "/documents", icon: FileText },
   { name: "Scan", href: "/scan", icon: Camera },
-  { name: "Teams", href: "/teams", icon: Users },
+  { name: "Alerts", href: "/notifications", icon: Bell },
   { name: "Profile", href: "/profile", icon: User },
 ];
 

@@ -8,8 +8,9 @@ import { FileText, Plus, Camera } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { DocumentStats } from "@/components/dashboard/DocumentStats";
-import { DocumentTypeChart } from "@/components/dashboard/DocumentTypeChart";
+
 import { ExpiryTimeline } from "@/components/dashboard/ExpiryTimeline";
+import { AIRenewalSuggestions } from "@/components/dashboard/AIRenewalSuggestions";
 
 interface Document {
   id: string;
@@ -17,6 +18,8 @@ interface Document {
   document_type: string;
   expiry_date: string;
   created_at: string;
+  issuing_authority?: string;
+  user_id: string;
 }
 
 interface DashboardStats {
@@ -29,8 +32,8 @@ interface DashboardStats {
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({ total: 0, expiringSoon: 0, expired: 0, valid: 0 });
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
-  const [typeData, setTypeData] = useState<Array<{ name: string; value: number }>>([]);
   const [timelineData, setTimelineData] = useState<Array<{ month: string; expiring: number }>>([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,21 +67,8 @@ export default function Dashboard() {
       const valid = total - expired - expiringSoon;
 
       setStats({ total, expiringSoon, expired, valid });
+      setDocuments(documents || []);
       setRecentDocuments(documents?.slice(0, 3) || []);
-
-      // Calculate document type distribution
-      const typeCounts: Record<string, number> = {};
-      documents?.forEach(doc => {
-        const type = doc.document_type.replace('_', ' ');
-        typeCounts[type] = (typeCounts[type] || 0) + 1;
-      });
-
-      setTypeData(
-        Object.entries(typeCounts).map(([name, value]) => ({
-          name: name.charAt(0).toUpperCase() + name.slice(1),
-          value,
-        }))
-      );
 
       // Calculate expiry timeline (next 6 months)
       const monthCounts: Record<string, number> = {};
@@ -155,9 +145,9 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Charts */}
-        <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <DocumentTypeChart data={typeData} />
+        {/* AI Renewal Suggestions and Timeline */}
+        <div className="grid grid-cols-1 gap-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <AIRenewalSuggestions documents={documents} />
           <ExpiryTimeline data={timelineData} />
         </div>
 
