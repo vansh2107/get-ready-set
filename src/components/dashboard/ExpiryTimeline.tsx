@@ -148,33 +148,41 @@ export function ExpiryTimeline({ data, documents }: ExpiryTimelineProps) {
       
       <CardContent className="space-y-4">
         {/* Chart */}
-        <div className={isExpanded ? "animate-scale-in" : ""}>
-          <ResponsiveContainer width="100%" height={isExpanded ? 300 : 250}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis 
-                dataKey="month" 
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                angle={isExpanded ? -45 : 0}
-                textAnchor={isExpanded ? "end" : "middle"}
-                height={isExpanded ? 80 : 30}
-              />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "6px",
-                }}
-              />
-              <Bar 
-                dataKey="expiring" 
-                fill={filter === 'expired' ? "hsl(var(--destructive))" : "hsl(var(--primary))"} 
-                radius={[4, 4, 0, 0]} 
-              />
-            </BarChart>
-          </ResponsiveContainer>
+        <div 
+          className={`overflow-x-auto ${isExpanded ? "animate-scale-in" : ""}`}
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'thin'
+          }}
+        >
+          <div style={{ minWidth: isExpanded ? `${Math.max(600, chartData.length * 60)}px` : '100%' }}>
+            <ResponsiveContainer width="100%" height={isExpanded ? 300 : 250}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  angle={isExpanded ? -45 : 0}
+                  textAnchor={isExpanded ? "end" : "middle"}
+                  height={isExpanded ? 80 : 30}
+                />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "6px",
+                  }}
+                />
+                <Bar 
+                  dataKey="expiring" 
+                  fill={filter === 'expired' ? "hsl(var(--destructive))" : "hsl(var(--primary))"} 
+                  radius={[4, 4, 0, 0]} 
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Expanded Controls */}
