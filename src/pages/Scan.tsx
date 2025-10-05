@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { ScanningEffect } from "@/components/scan/ScanningEffect";
 
 const documentSchema = z.object({
   name: z.string().min(1, "Document name is required"),
@@ -357,17 +358,15 @@ export default function Scan() {
         {capturedImage && (
           <Card>
             <CardContent className="p-4 space-y-4">
-              <img src={capturedImage} alt="Captured document" className="w-full rounded-lg" />
-              {extracting && (
-                <div className="flex items-center justify-center gap-2 text-primary">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Extracting document data...</span>
-                </div>
-              )}
-              {!extracting && (
-                <Button variant="outline" onClick={retakePhoto} className="w-full">
-                  Retake Photo
-                </Button>
+              {extracting ? (
+                <ScanningEffect imageUrl={capturedImage} />
+              ) : (
+                <>
+                  <img src={capturedImage} alt="Captured document" className="w-full rounded-lg" />
+                  <Button variant="outline" onClick={retakePhoto} className="w-full">
+                    Retake Photo
+                  </Button>
+                </>
               )}
             </CardContent>
           </Card>
