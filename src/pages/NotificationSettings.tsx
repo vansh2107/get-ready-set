@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -7,21 +7,83 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Bell } from "lucide-react";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function NotificationSettings() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
   const [expiryReminders, setExpiryReminders] = useState(true);
   const [renewalReminders, setRenewalReminders] = useState(true);
   const [weeklyDigest, setWeeklyDigest] = useState(false);
 
-  const handleSave = () => {
-    toast({
-      title: "Settings saved",
-      description: "Your notification preferences have been updated.",
-    });
+  useEffect(() => {
+    if (user) {
+      loadPreferences();
+    }
+  }, [user]);
+
+  const loadPreferences = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('email_notifications_enabled, push_notifications_enabled, expiry_reminders_enabled, renewal_reminders_enabled, weekly_digest_enabled')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setEmailNotifications(data.email_notifications_enabled ?? true);
+        setPushNotifications(data.push_notifications_enabled ?? false);
+        setExpiryReminders(data.expiry_reminders_enabled ?? true);
+        setRenewalReminders(data.renewal_reminders_enabled ?? true);
+        setWeeklyDigest(data.weekly_digest_enabled ?? false);
+      }
+    } catch (error) {
+      console.error('Error loading preferences:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          email_notifications_enabled: emailNotifications,
+          push_notifications_enabled: pushNotifications,
+          expiry_reminders_enabled: expiryReminders,
+          renewal_reminders_enabled: renewalReminders,
+          weekly_digest_enabled: weeklyDigest,
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Settings saved",
+        description: "Your notification preferences have been updated.",
+      });
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save notification preferences.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -120,8 +182,8 @@ export default function NotificationSettings() {
           </CardContent>
         </Card>
 
-        <Button onClick={handleSave} className="w-full" size="lg">
-          Save Preferences
+        <Button onClick={handleSave} className="w-full" size="lg" disabled={saving || loading}>
+          {saving ? "Saving..." : "Save Preferences"}
         </Button>
       </main>
 

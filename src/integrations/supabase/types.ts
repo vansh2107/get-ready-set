@@ -205,25 +205,43 @@ export type Database = {
           country: string | null
           created_at: string
           display_name: string | null
+          email: string | null
+          email_notifications_enabled: boolean | null
+          expiry_reminders_enabled: boolean | null
           id: string
+          push_notifications_enabled: boolean | null
+          renewal_reminders_enabled: boolean | null
           updated_at: string
           user_id: string
+          weekly_digest_enabled: boolean | null
         }
         Insert: {
           country?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
+          email_notifications_enabled?: boolean | null
+          expiry_reminders_enabled?: boolean | null
           id?: string
+          push_notifications_enabled?: boolean | null
+          renewal_reminders_enabled?: boolean | null
           updated_at?: string
           user_id: string
+          weekly_digest_enabled?: boolean | null
         }
         Update: {
           country?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
+          email_notifications_enabled?: boolean | null
+          expiry_reminders_enabled?: boolean | null
           id?: string
+          push_notifications_enabled?: boolean | null
+          renewal_reminders_enabled?: boolean | null
           updated_at?: string
           user_id?: string
+          weekly_digest_enabled?: boolean | null
         }
         Relationships: []
       }
