@@ -27,14 +27,45 @@ export default function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user has a valid recovery session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+    // Ensure we recognize the recovery session (covers both hash and code flows)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || session) {
         setValidSession(true);
-      } else {
-        setError("Invalid or expired reset link. Please request a new password reset.");
+        setError("");
       }
     });
+
+    const url = new URL(window.location.href);
+    const hasCode = url.searchParams.get("code");
+
+    if (hasCode) {
+      // Handle links that use the `code` param (PKCE flow)
+      supabase.auth.exchangeCodeForSession(url.href).then(({ data, error }) => {
+        if (data?.session) {
+          setValidSession(true);
+        } else if (error) {
+          setError("Invalid or expired reset link. Please request a new password reset.");
+        }
+      });
+    } else {
+      // Fallback for hash-based recovery links
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          setValidSession(true);
+        } else {
+          // Give onAuthStateChange a brief moment to process the URL hash
+          setTimeout(() => {
+            supabase.auth.getSession().then(({ data: { session } }) => {
+              if (!session) {
+                setError("Invalid or expired reset link. Please request a new password reset.");
+              }
+            });
+          }, 500);
+        }
+      });
+    }
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
