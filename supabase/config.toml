@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.ai-document-analysis]
 verify_jwt = true
+
+[functions.send-reminder-emails]
+verify_jwt = false
