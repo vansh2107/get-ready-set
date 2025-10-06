@@ -53,7 +53,7 @@ export default function Auth() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `https://code-pal-launch.vercel.app/reset-password`,
       });
 
       if (error) {
@@ -88,7 +88,7 @@ export default function Auth() {
         return;
       }
 
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `https://code-pal-launch.vercel.app/`;
 
       const { error } = await supabase.auth.signUp({
         email: validation.email,
