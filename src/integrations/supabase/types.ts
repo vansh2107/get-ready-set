@@ -250,6 +250,7 @@ export type Database = {
           created_at: string
           document_id: string
           id: string
+          is_custom: boolean | null
           is_sent: boolean | null
           reminder_date: string
           user_id: string
@@ -258,6 +259,7 @@ export type Database = {
           created_at?: string
           document_id: string
           id?: string
+          is_custom?: boolean | null
           is_sent?: boolean | null
           reminder_date: string
           user_id: string
@@ -266,6 +268,7 @@ export type Database = {
           created_at?: string
           document_id?: string
           id?: string
+          is_custom?: boolean | null
           is_sent?: boolean | null
           reminder_date?: string
           user_id?: string

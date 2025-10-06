@@ -280,7 +280,8 @@ export default function Scan() {
           document_id: data.id,
           user_id: user?.id,
           reminder_date: formData.custom_reminder_date,
-        });
+          is_custom: true,
+        } as any);
       }
 
       await supabase.from('reminders').insert(reminders);

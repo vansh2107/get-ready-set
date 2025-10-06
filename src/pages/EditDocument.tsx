@@ -67,14 +67,13 @@ export default function EditDocument() {
         return;
       }
 
-      // Fetch existing custom reminder
+      // Fetch existing custom reminder only
       const { data: reminderData } = await supabase
         .from('reminders')
         .select('reminder_date')
         .eq('document_id', id)
         .eq('user_id', user?.id)
-        .order('reminder_date', { ascending: false })
-        .limit(1)
+        .eq('is_custom', true)
         .maybeSingle();
 
       setFormData({
@@ -163,7 +162,8 @@ export default function EditDocument() {
           user_id: user?.id,
           reminder_date: formData.custom_reminder_date,
           is_sent: false,
-        });
+          is_custom: true,
+        } as any);
       }
 
       // Insert all reminders
