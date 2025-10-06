@@ -59,11 +59,12 @@ export default function Auth() {
       if (error) {
         setError(error.message);
       } else {
-        setSuccess("Password reset link sent! Check your email.");
+        setSuccess("A new password reset link has been sent to your email!");
         setTimeout(() => {
           setForgotPasswordOpen(false);
           setResetEmail("");
-        }, 2000);
+          setSuccess("");
+        }, 3000);
       }
     } catch (err) {
       setError("Failed to send reset email");
