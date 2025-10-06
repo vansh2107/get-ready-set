@@ -124,23 +124,51 @@ export default function EditDocument() {
 
       if (error) throw error;
 
-      // Delete existing custom reminders for this document
+      // Delete all existing reminders for this document
       await supabase
         .from('reminders')
         .delete()
         .eq('document_id', id)
         .eq('user_id', user?.id);
 
+      // Recreate AI-based reminders
+      const renewalDays = validatedData.renewal_period_days;
+      let reminderStages: number[] = [];
+      
+      if (renewalDays >= 90) {
+        reminderStages = [60, 30, 7];
+      } else if (renewalDays >= 30) {
+        reminderStages = [30, 14, 3];
+      } else if (renewalDays >= 14) {
+        reminderStages = [14, 7, 2];
+      } else {
+        reminderStages = [7, 3, 1];
+      }
+      
+      const reminders = reminderStages.map(days => {
+        const reminderDate = new Date(validatedData.expiry_date);
+        reminderDate.setDate(reminderDate.getDate() - days);
+        return {
+          document_id: id,
+          user_id: user?.id,
+          reminder_date: reminderDate.toISOString().split('T')[0],
+          is_sent: false,
+        };
+      });
+      
       // Add custom reminder if provided
       if (formData.custom_reminder_date) {
-        await supabase
-          .from('reminders')
-          .insert({
-            document_id: id,
-            user_id: user?.id,
-            reminder_date: formData.custom_reminder_date,
-            is_sent: false,
-          });
+        reminders.push({
+          document_id: id,
+          user_id: user?.id,
+          reminder_date: formData.custom_reminder_date,
+          is_sent: false,
+        });
+      }
+
+      // Insert all reminders
+      if (reminders.length > 0) {
+        await supabase.from('reminders').insert(reminders);
       }
 
       toast({
