@@ -14,13 +14,214 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_logs: {
+        Row: {
+          action: string
+          changes: Json | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      document_history: {
+        Row: {
+          action: string
+          changes: Json | null
+          created_at: string | null
+          document_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          created_at?: string | null
+          document_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          created_at?: string | null
+          document_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_history_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          created_at: string | null
+          document_type: string
+          expiry_date: string
+          id: string
+          issuing_authority: string | null
+          name: string
+          notes: string | null
+          renewal_period_days: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          document_type: string
+          expiry_date: string
+          id?: string
+          issuing_authority?: string | null
+          name: string
+          notes?: string | null
+          renewal_period_days?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          document_type?: string
+          expiry_date?: string
+          id?: string
+          issuing_authority?: string | null
+          name?: string
+          notes?: string | null
+          renewal_period_days?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      organizations: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          country: string | null
+          created_at: string | null
+          display_name: string | null
+          email_notifications_enabled: boolean | null
+          expiry_reminders_enabled: boolean | null
+          id: string
+          push_notifications_enabled: boolean | null
+          renewal_reminders_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+          weekly_digest_enabled: boolean | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          email_notifications_enabled?: boolean | null
+          expiry_reminders_enabled?: boolean | null
+          id?: string
+          push_notifications_enabled?: boolean | null
+          renewal_reminders_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          weekly_digest_enabled?: boolean | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          email_notifications_enabled?: boolean | null
+          expiry_reminders_enabled?: boolean | null
+          id?: string
+          push_notifications_enabled?: boolean | null
+          renewal_reminders_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          weekly_digest_enabled?: boolean | null
+        }
+        Relationships: []
+      }
+      reminders: {
+        Row: {
+          created_at: string | null
+          document_id: string
+          id: string
+          is_sent: boolean | null
+          reminder_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          document_id: string
+          id?: string
+          is_sent?: boolean | null
+          reminder_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          document_id?: string
+          id?: string
+          is_sent?: boolean | null
+          reminder_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      delete_user: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
