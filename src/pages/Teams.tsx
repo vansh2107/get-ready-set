@@ -111,8 +111,11 @@ export default function Teams() {
       .in('user_id', userIds);
 
     const membersWithProfiles = data?.map(member => ({
-      ...member,
-      profiles: profiles?.find(p => p.user_id === member.user_id) || null
+      id: member.id,
+      user_id: member.user_id,
+      role: member.role as 'admin' | 'editor' | 'viewer',
+      created_at: member.created_at,
+      profiles: profiles?.find(p => p.user_id === member.user_id) || undefined
     })) || [];
 
     setMembers(membersWithProfiles);

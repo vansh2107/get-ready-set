@@ -51,6 +51,9 @@ export type Database = {
           created_at: string | null
           document_id: string
           id: string
+          new_expiry_date: string | null
+          notes: string | null
+          old_expiry_date: string | null
           user_id: string
         }
         Insert: {
@@ -59,6 +62,9 @@ export type Database = {
           created_at?: string | null
           document_id: string
           id?: string
+          new_expiry_date?: string | null
+          notes?: string | null
+          old_expiry_date?: string | null
           user_id: string
         }
         Update: {
@@ -67,6 +73,9 @@ export type Database = {
           created_at?: string | null
           document_id?: string
           id?: string
+          new_expiry_date?: string | null
+          notes?: string | null
+          old_expiry_date?: string | null
           user_id?: string
         }
         Relationships: [
@@ -85,6 +94,7 @@ export type Database = {
           document_type: string
           expiry_date: string
           id: string
+          image_path: string | null
           issuing_authority: string | null
           name: string
           notes: string | null
@@ -97,6 +107,7 @@ export type Database = {
           document_type: string
           expiry_date: string
           id?: string
+          image_path?: string | null
           issuing_authority?: string | null
           name: string
           notes?: string | null
@@ -109,6 +120,7 @@ export type Database = {
           document_type?: string
           expiry_date?: string
           id?: string
+          image_path?: string | null
           issuing_authority?: string | null
           name?: string
           notes?: string | null
@@ -118,21 +130,56 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          organization_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string | null
           id: string
           name: string
+          owner_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
           name: string
+          owner_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
           name?: string
+          owner_id?: string | null
         }
         Relationships: []
       }
@@ -183,6 +230,7 @@ export type Database = {
           created_at: string | null
           document_id: string
           id: string
+          is_custom: boolean | null
           is_sent: boolean | null
           reminder_date: string
           user_id: string
@@ -191,6 +239,7 @@ export type Database = {
           created_at?: string | null
           document_id: string
           id?: string
+          is_custom?: boolean | null
           is_sent?: boolean | null
           reminder_date: string
           user_id: string
@@ -199,6 +248,7 @@ export type Database = {
           created_at?: string | null
           document_id?: string
           id?: string
+          is_custom?: boolean | null
           is_sent?: boolean | null
           reminder_date?: string
           user_id?: string

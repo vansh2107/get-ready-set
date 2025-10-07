@@ -10,7 +10,7 @@ interface AuditLog {
   action: string;
   entity_type: string;
   created_at: string;
-  document_id: string | null;
+  entity_id: string | null;
 }
 
 export function AuditLogs() {
@@ -25,7 +25,7 @@ export function AuditLogs() {
     try {
       const { data, error } = await supabase
         .from("audit_logs")
-        .select("id, action, entity_type, created_at, document_id")
+        .select("id, action, entity_type, created_at, entity_id")
         .order("created_at", { ascending: false })
         .limit(50);
 
