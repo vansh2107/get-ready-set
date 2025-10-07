@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, FileText, Download, User, Shield, Bell, LogOut, HelpCircle, MessageSquare, Info, Mail, FileCheck } from "lucide-react";
+import { ChevronRight, FileText, Download, User, Shield, Bell, LogOut, HelpCircle, MessageSquare, Info, Mail, FileCheck, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate, Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -210,6 +211,49 @@ export default function Profile() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    try {
+      // Delete user's documents first
+      const { error: documentsError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (documentsError) throw documentsError;
+
+      // Delete user's profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Delete the auth user account
+      const { error: authError } = await supabase.rpc('delete_user');
+
+      if (authError) throw authError;
+
+      toast({
+        title: "Account deleted",
+        description: "Your account has been permanently deleted.",
+      });
+
+      // Sign out and redirect
+      await signOut();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete account. Please try again or contact support.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -374,6 +418,34 @@ export default function Profile() {
               </div>
             </DialogContent>
           </Dialog>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button className="w-full">
+                <div className="flex items-center justify-between p-4 hover:bg-destructive/5 smooth cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <Trash2 className="h-5 w-5 text-destructive" />
+                    <span className="text-destructive font-medium">Delete Account</span>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-destructive group-hover:translate-x-1 smooth" />
+                </div>
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete your account and remove all your documents, reminders, and data from our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Delete Account
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </SettingsSection>
 
         {/* Support Section */}
