@@ -16,7 +16,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(12, "Password must be at least 12 characters"),
+  password: z.string()
+    .min(12, "Password must be at least 12 characters")
+    .regex(/[A-Z]/, "Password must contain at least 1 uppercase letter")
+    .regex(/[0-9]/, "Password must contain at least 1 number")
+    .regex(/[^A-Za-z0-9]/, "Password must contain at least 1 special character"),
 });
 
 const COUNTRIES = [
@@ -201,7 +205,7 @@ export default function Auth() {
                     disabled={loading}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Must be at least 12 characters
+                    Min 12 characters, 1 uppercase, 1 number, 1 special character
                   </p>
                 </div>
                 {error && (
@@ -254,7 +258,7 @@ export default function Auth() {
                     disabled={loading}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Must be at least 12 characters for security
+                    Min 12 characters, 1 uppercase, 1 number, 1 special character
                   </p>
                 </div>
                 <div className="space-y-2">
