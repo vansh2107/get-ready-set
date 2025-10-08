@@ -52,14 +52,16 @@ export default function Auth() {
     setSuccess("");
 
     try {
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `https://code-pal-launch.vercel.app/reset-password`,
+        redirectTo: redirectUrl,
       });
 
       if (error) {
         setError(error.message);
       } else {
-        setSuccess("A new password reset link has been sent to your email!");
+        setSuccess("A password reset link has been sent to your email!");
         setTimeout(() => {
           setForgotPasswordOpen(false);
           setResetEmail("");
@@ -88,7 +90,7 @@ export default function Auth() {
         return;
       }
 
-      const redirectUrl = `https://code-pal-launch.vercel.app/`;
+      const redirectUrl = `${window.location.origin}/`;
 
       const { error } = await supabase.auth.signUp({
         email: validation.email,
