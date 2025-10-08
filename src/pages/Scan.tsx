@@ -225,8 +225,6 @@ export default function Scan() {
         }
       }
 
-      const selectedOrgId = selectedOrg === "personal" ? null : selectedOrg;
-
       const { data, error } = await supabase
         .from('documents')
         .insert({
@@ -237,7 +235,6 @@ export default function Scan() {
           renewal_period_days: validatedData.renewal_period_days,
           notes: validatedData.notes,
           user_id: user.id,
-          organization_id: selectedOrgId,
           image_path: imagePath,
         })
         .select()
