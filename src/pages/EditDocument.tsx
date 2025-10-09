@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { scheduleNotificationForReminder } from "@/services/notificationService";
 import { z } from "zod";
 
 const documentSchema = z.object({
@@ -168,7 +169,20 @@ export default function EditDocument() {
 
       // Insert all reminders
       if (reminders.length > 0) {
-        await supabase.from('reminders').insert(reminders);
+        const { data: insertedReminders } = await supabase.from('reminders').insert(reminders).select();
+        
+        // Schedule local push notifications for each reminder
+        if (insertedReminders) {
+          for (const reminder of insertedReminders) {
+            await scheduleNotificationForReminder(
+              reminder.id,
+              reminder.reminder_date,
+              validatedData.name,
+              validatedData.document_type,
+              id!
+            );
+          }
+        }
       }
 
       toast({

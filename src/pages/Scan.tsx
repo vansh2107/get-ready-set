@@ -13,6 +13,7 @@ import { ArrowLeft, Save, Loader2, Camera, Upload } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { toast } from "@/hooks/use-toast";
+import { scheduleNotificationForReminder } from "@/services/notificationService";
 import { z } from "zod";
 import { ScanningEffect } from "@/components/scan/ScanningEffect";
 
@@ -281,7 +282,20 @@ export default function Scan() {
         } as any);
       }
 
-      await supabase.from('reminders').insert(reminders);
+      const { data: insertedReminders } = await supabase.from('reminders').insert(reminders).select();
+
+      // Schedule local push notifications for each reminder
+      if (insertedReminders) {
+        for (const reminder of insertedReminders) {
+          await scheduleNotificationForReminder(
+            reminder.id,
+            reminder.reminder_date,
+            data.name,
+            data.document_type,
+            data.id
+          );
+        }
+      }
 
       toast({
         title: "Document added successfully",
